@@ -6,9 +6,17 @@ api_utils
 Flask utils which help you to create API.
 
 """
-from flask import Flask, jsonify, request, abort
+from flask import Flask, json, request, current_app
 
 __all__ = ('ResponsiveFlask',)
+
+
+def json_formatter(*args, **kwargs):
+    indent = None
+    if (current_app.config['JSONIFY_PRETTYPRINT_REGULAR'] and
+            not request.is_xhr):
+        indent = 2
+    return json.dumps(dict(*args, **kwargs), indent=indent)
 
 
 class ResponsiveFlask(Flask):
@@ -24,8 +32,8 @@ class ResponsiveFlask(Flask):
             return {'hello': 'world'}
 
 
-        def dummy_xml_formatter(dict_items):
-            return make_response('<hello>world</hello>')
+        def dummy_xml_formatter(*args, **kwargs):
+            return '<hello>world</hello>'
 
         xml_mimetype = 'application/vnd.company+xml'
 
@@ -36,7 +44,7 @@ class ResponsiveFlask(Flask):
 
     default_mimetype = 'application/json'
     response_formatters = {
-        'application/json': jsonify,
+        'application/json': json_formatter,
     }
 
     def make_response(self, rv):
@@ -65,12 +73,24 @@ class ResponsiveFlask(Flask):
                     response_mimetype = mimetype
                     break
             else:
-                abort(406)
+                default_formatter = self.response_formatters.get(
+                    self.default_mimetype
+                )
+                available_mimetypes = default_formatter(
+                    mimetypes=self.response_formatters.keys()
+                )
+
+                return self.response_class(
+                    response=available_mimetypes,
+                    status=406,
+                    mimetype=self.default_mimetype,
+                )
 
         formatter = self.response_formatters.get(response_mimetype)
         if isinstance(rv, dict):
-            response = formatter(rv)
-            response.headers['Content-Type'] = response_mimetype
-            return response
+            return self.response_class(
+                response=formatter(**rv),
+                mimetype=response_mimetype,
+            )
 
         return super(ResponsiveFlask, self).make_response(rv)

@@ -11,7 +11,6 @@ It tries to follow RFC 2616, **Accept** request-header.
 
 .. code-block:: python
 
-    from flask import make_response
     from api_utils import ResponsiveFlask
 
 
@@ -23,16 +22,15 @@ It tries to follow RFC 2616, **Accept** request-header.
         return {'hello': 'world'}
 
 
-    def dummy_xml_formatter(dict_items):
-        return make_response('<hello>world</hello>')
+    def dummy_xml_formatter(*args, **kwargs):
+        return '<hello>world</hello>'
 
     xml_mimetype = 'application/vnd.company+xml'
-
-    app.default_mimetype = xml_mimetype
     app.response_formatters[xml_mimetype] = dummy_xml_formatter
 
     if __name__ == '__main__':
         app.run()
+
 
 It's assumed that file was saved as ``api.py``:
 
@@ -45,11 +43,36 @@ Here are curl examples:
 
 .. code-block:: console
 
-    $ curl http://127.0.0.1:5000/
-    <hello>world</hello>
-    $ curl http://127.0.0.1:5000/ -H 'Accept: application/json'
+    $ curl http://127.0.0.1:5000/ -i
+    HTTP/1.0 200 OK
+    Content-Type: application/json
+    Content-Length: 22
+    Server: Werkzeug/0.9.4 Python/2.7.5
+    Date: Sat, 07 Dec 2013 14:01:14 GMT
+
     {
       "hello": "world"
+    }
+    $ curl http://127.0.0.1:5000/ -H 'Accept: application/vnd.company+xml' -i
+    HTTP/1.0 200 OK
+    Content-Type: application/vnd.company+xml; charset=utf-8
+    Content-Length: 20
+    Server: Werkzeug/0.9.4 Python/2.7.5
+    Date: Sat, 07 Dec 2013 14:01:50 GMT
+
+    <hello>world</hello>
+    $ curl http://127.0.0.1:5000/ -H 'Accept: blah/*' -i
+    HTTP/1.0 406 NOT ACCEPTABLE
+    Content-Type: application/json
+    Content-Length: 83
+    Server: Werkzeug/0.9.4 Python/2.7.5
+    Date: Sat, 07 Dec 2013 14:02:23 GMT
+
+    {
+      "mimetypes": [
+        "application/json",
+        "application/vnd.company+xml"
+      ]
     }
 
 Tests are run by:
@@ -57,4 +80,4 @@ Tests are run by:
 .. code-block:: console
 
     $ pip install -r requirements.txt
-    $ nosetest
+    $ nosetests
