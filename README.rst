@@ -80,4 +80,4 @@ Tests are run by:
 .. code-block:: console
 
     $ pip install -r requirements.txt
-    $ nosetests
+    $ tox
