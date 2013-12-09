@@ -77,7 +77,7 @@ class ResponsiveFlask(Flask):
                     self.default_mimetype
                 )
                 available_mimetypes = default_formatter(
-                    mimetypes=self.response_formatters.keys()
+                    mimetypes=list(self.response_formatters)
                 )
 
                 return self.response_class(

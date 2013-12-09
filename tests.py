@@ -1,7 +1,7 @@
 # coding: utf-8
-import json
 from unittest import TestCase
 
+from flask import json
 from api_utils import ResponsiveFlask
 
 
@@ -18,7 +18,7 @@ expected_json = {'hello': 'world'}
 def dummy_xml_formatter(*args, **kwargs):
     return '<hello>world</hello>'
 
-expected_xml = '<hello>world</hello>'
+expected_xml = b'<hello>world</hello>'
 
 
 class ResponsiveFlaskTest(TestCase):
