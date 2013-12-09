@@ -6,17 +6,12 @@ api_utils
 Flask utils which help you to create API.
 
 """
-from flask import Flask, json, request, current_app
+from flask import Flask, request
+
+from . import formatters
+
 
 __all__ = ('ResponsiveFlask',)
-
-
-def json_formatter(*args, **kwargs):
-    indent = None
-    if (current_app.config['JSONIFY_PRETTYPRINT_REGULAR'] and
-            not request.is_xhr):
-        indent = 2
-    return json.dumps(dict(*args, **kwargs), indent=indent)
 
 
 class ResponsiveFlask(Flask):
@@ -44,7 +39,7 @@ class ResponsiveFlask(Flask):
 
     default_mimetype = 'application/json'
     response_formatters = {
-        'application/json': json_formatter,
+        'application/json': formatters.json,
     }
 
     def make_response(self, rv):
