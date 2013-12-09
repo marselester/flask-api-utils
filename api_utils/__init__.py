@@ -42,6 +42,29 @@ class ResponsiveFlask(Flask):
         'application/json': formatters.json,
     }
 
+    def _response_mimetype_based_on_accept_header(self):
+        """Determines mimetype to response based on Accept header.
+
+        If mimetype is not found, it returns ``None``.
+
+        """
+        response_mimetype = None
+
+        if not request.accept_mimetypes:
+            response_mimetype = self.default_mimetype
+        else:
+            all_media_types_wildcard = '*/*'
+
+            for mimetype, q in request.accept_mimetypes:
+                if mimetype == all_media_types_wildcard:
+                    response_mimetype = self.default_mimetype
+                    break
+                if mimetype in self.response_formatters:
+                    response_mimetype = mimetype
+                    break
+
+        return response_mimetype
+
     def make_response(self, rv):
         """Returns response based on Accept header.
 
@@ -55,37 +78,32 @@ class ResponsiveFlask(Flask):
         be sent.
 
         """
-        if not request.accept_mimetypes:
-            response_mimetype = self.default_mimetype
-        else:
-            all_media_types_wildcard = '*/*'
+        status = headers = None
+        if isinstance(rv, tuple):
+            rv, status, headers = rv + (None,) * (3 - len(rv))
 
-            for mimetype, q in request.accept_mimetypes:
-                if mimetype == all_media_types_wildcard:
-                    response_mimetype = self.default_mimetype
-                    break
-                if mimetype in self.response_formatters:
-                    response_mimetype = mimetype
-                    break
-            else:
-                default_formatter = self.response_formatters.get(
-                    self.default_mimetype
-                )
-                available_mimetypes = default_formatter(
-                    mimetypes=list(self.response_formatters)
-                )
+        response_mimetype = self._response_mimetype_based_on_accept_header()
+        if response_mimetype is None:
+            # Return 406, list of available mimetypes in default format.
+            default_formatter = self.response_formatters.get(
+                self.default_mimetype
+            )
+            available_mimetypes = default_formatter(
+                mimetypes=list(self.response_formatters)
+            )
 
-                return self.response_class(
-                    response=available_mimetypes,
-                    status=406,
-                    mimetype=self.default_mimetype,
-                )
-
-        formatter = self.response_formatters.get(response_mimetype)
-        if isinstance(rv, dict):
-            return self.response_class(
+            rv = self.response_class(
+                response=available_mimetypes,
+                status=406,
+                mimetype=self.default_mimetype,
+            )
+        elif isinstance(rv, dict):
+            formatter = self.response_formatters.get(response_mimetype)
+            rv = self.response_class(
                 response=formatter(**rv),
                 mimetype=response_mimetype,
             )
 
-        return super(ResponsiveFlask, self).make_response(rv)
+        return super(ResponsiveFlask, self).make_response(
+            rv=(rv, status, headers)
+        )

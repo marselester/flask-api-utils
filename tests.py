@@ -2,7 +2,7 @@
 from unittest import TestCase
 
 from flask import json
-from api_utils import ResponsiveFlask
+from api_utils import ResponsiveFlask, formatters
 
 
 app = ResponsiveFlask('test_app')
@@ -24,6 +24,9 @@ expected_xml = b'<hello>world</hello>'
 class ResponsiveFlaskTest(TestCase):
 
     def setUp(self):
+        app.default_mimetype = 'application/json'
+        app.response_formatters = {'application/json': formatters.json}
+
         self.app = app.test_client()
 
     def test_json_response_when_accept_header_is_not_given(self):
@@ -52,6 +55,19 @@ class ResponsiveFlaskTest(TestCase):
         not_acceptable_status_code = 406
 
         self.assertEqual(r.status_code, not_acceptable_status_code)
+        self.assertEqual(r.mimetype, 'application/json')
+
+    def test_list_of_mimetypes_is_in_json_when_format_is_unknown(self):
+        headers = {
+            'Accept': 'blah/*',
+        }
+        r = self.app.get('/', headers=headers)
+        r_json = json.loads(r.data)
+        expected_json = {
+            'mimetypes': ['application/json'],
+        }
+
+        self.assertEqual(r_json, expected_json)
         self.assertEqual(r.mimetype, 'application/json')
 
     def test_json_is_used_because_xml_formatter_is_not_set(self):
@@ -96,5 +112,18 @@ class ResponsiveFlaskTest(TestCase):
         r = self.app.get('/', headers=headers)
         r_json = json.loads(r.data)
 
+        self.assertEqual(r_json, expected_json)
+        self.assertEqual(r.mimetype, 'application/json')
+
+    def test_rv_as_dict_response_and_status_code(self):
+        @app.route('/201')
+        def hello_world_201_status():
+            return {'hello': 'world'}, 201
+
+        r = self.app.get('/201')
+        r_json = json.loads(r.data)
+        expected_status_code = 201
+
+        self.assertEqual(r.status_code, expected_status_code)
         self.assertEqual(r_json, expected_json)
         self.assertEqual(r.mimetype, 'application/json')
