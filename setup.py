@@ -8,6 +8,7 @@ setup(
     packages=['api_utils'],
     author='Marsel Mavletkulov',
     author_email='marselester@ya.ru',
+    url='https://github.com/marselester/flask-api-utils',
     description='Flask utils which help you to create API.',
     long_description=open('README.rst').read(),
     install_requires=['Flask>=0.10'],
