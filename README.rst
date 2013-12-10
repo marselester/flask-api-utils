@@ -14,6 +14,7 @@ It tries to follow RFC 2616, **Accept** request-header.
 
 .. code-block:: python
 
+    from flask import request
     from api_utils import ResponsiveFlask
 
 
@@ -23,6 +24,11 @@ It tries to follow RFC 2616, **Accept** request-header.
     @app.route('/')
     def hello_world():
         return {'hello': 'world'}
+
+
+    @app.route('/yarr')
+    def hello_bad_request():
+        request.args['bad-key']
 
 
     def dummy_xml_formatter(*args, **kwargs):
@@ -42,7 +48,7 @@ It's assumed that file was saved as ``api.py``:
     $ python api.py
      * Running on http://127.0.0.1:5000/
 
-Here are curl examples:
+Here are curl examples with different **Accept** headers:
 
 .. code-block:: console
 
@@ -76,6 +82,22 @@ Here are curl examples:
         "application/json",
         "application/vnd.company+xml"
       ]
+    }
+
+It even formats built in Werkzeug HTTP exceptions:
+
+.. code-block:: console
+
+    $ curl http://127.0.0.1:5000/yarr -i
+    HTTP/1.0 400 BAD REQUEST
+    Content-Type: application/json
+    Content-Length: 51
+    Server: Werkzeug/0.9.4 Python/2.7.5
+    Date: Tue, 10 Dec 2013 04:55:40 GMT
+
+    {
+      "code": 400,
+      "message": "400: Bad Request"
     }
 
 Tests are run by:
