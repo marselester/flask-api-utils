@@ -6,12 +6,13 @@ api_utils
 Flask utils which help you to create API.
 
 """
+from werkzeug.exceptions import default_exceptions
 from flask import Flask, request
 
 from . import formatters
 
 
-__all__ = ('ResponsiveFlask',)
+__all__ = ('ResponsiveFlask')
 
 
 class ResponsiveFlask(Flask):
@@ -41,6 +42,34 @@ class ResponsiveFlask(Flask):
     response_formatters = {
         'application/json': formatters.json,
     }
+
+    def __init__(self, *args, **kwargs):
+        """Makes all built in HTTP exceptions unified dict format.
+
+        It assumes that ``Flask.make_response()`` can understand dict format
+        and make appropriate response.
+
+        The format is:
+
+        .. code-block:: python
+
+            {
+                'code': 400,
+                'message': '400: Bad Request',
+            }
+
+        """
+        super(ResponsiveFlask, self).__init__(*args, **kwargs)
+
+        def make_error_response(error):
+            response = {
+                'code': error.code,
+                'message': str(error),
+            }
+            return response, error.code
+
+        for http_code in default_exceptions:
+            self.error_handler_spec[None][http_code] = make_error_response
 
     def _response_mimetype_based_on_accept_header(self):
         """Determines mimetype to response based on Accept header.

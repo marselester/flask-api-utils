@@ -1,11 +1,11 @@
 # coding: utf-8
 from unittest import TestCase
 
-from flask import json
+from flask import json, request
 from api_utils import ResponsiveFlask, formatters
 
 
-app = ResponsiveFlask('test_app')
+app = ResponsiveFlask(__name__)
 
 
 @app.route('/')
@@ -126,4 +126,23 @@ class ResponsiveFlaskTest(TestCase):
 
         self.assertEqual(r.status_code, expected_status_code)
         self.assertEqual(r_json, expected_json)
+        self.assertEqual(r.mimetype, 'application/json')
+
+
+class ErrorHandlingByResponsiveFlaskTest(TestCase):
+
+    def setUp(self):
+        self.app = app.test_client()
+
+    def test_400_error_is_json_formatted_when_view_raises_key_error(self):
+        @app.route('/400')
+        def hello_bad_request():
+            request.args['bad-key']
+
+        r = self.app.get('/400')
+        r_json = json.loads(r.data)
+        expected_status_code = 400
+
+        self.assertEqual(r.status_code, expected_status_code)
+        self.assertEqual(r_json['code'], expected_status_code)
         self.assertEqual(r.mimetype, 'application/json')
