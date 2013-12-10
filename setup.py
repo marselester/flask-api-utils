@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name='Flask-API-Utils',
-    version='0.1.0-dev',
+    version='0.1.0',
     packages=['api_utils'],
     author='Marsel Mavletkulov',
     author_email='marselester@ya.ru',
