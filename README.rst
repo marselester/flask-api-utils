@@ -2,6 +2,9 @@
 Flask API Utils
 ===============
 
+.. image:: https://travis-ci.org/marselester/flask-api-utils.png
+   :target: https://travis-ci.org/marselester/flask-api-utils
+
 Flask utils which help you to create API.
 
 "Accept" Header based Response
