@@ -84,7 +84,10 @@ Here are curl examples with different **Accept** headers:
       ]
     }
 
-It even formats built in Werkzeug HTTP exceptions:
+Error Handling
+--------------
+
+``ResponsiveFlask`` even formats built in Werkzeug HTTP exceptions.
 
 .. code-block:: console
 
@@ -99,6 +102,99 @@ It even formats built in Werkzeug HTTP exceptions:
       "code": 400,
       "message": "400: Bad Request"
     }
+
+You can set your own HTTP error handler by using ``app.default_errorhandler``
+decorator. Note that it might override already defined error handlers,
+so you should declare it before them.
+
+.. code-block:: python
+
+    from flask import request
+    from api_utils import ResponsiveFlask
+
+
+    app = ResponsiveFlask(__name__)
+
+
+    @app.default_errorhandler
+    def werkzeug_default_exceptions_handler(error):
+        error_info_url = (
+            'http://developer.example.com/errors.html#error-code-{}'
+        ).format(error.code)
+
+        response = {
+            'code': error.code,
+            'message': str(error),
+            'info_url': error_info_url,
+        }
+        return response, error.code
+
+
+    @app.errorhandler(404)
+    def page_not_found(error):
+        return {'error': 'This page does not exist'}, 404
+
+
+    class MyException(Exception):
+        pass
+
+
+    @app.errorhandler(MyException)
+    def special_exception_handler(error):
+        return {'error': str(error)}
+
+
+    @app.route('/my-exc')
+    def hello_my_exception():
+        raise MyException('Krivens!')
+
+
+    @app.route('/yarr')
+    def hello_bad_request():
+        request.args['bad-key']
+
+
+    if __name__ == '__main__':
+        app.run()
+
+
+.. code-block:: console
+
+    $ curl http://127.0.0.1:5000/yarr -i
+    HTTP/1.0 400 BAD REQUEST
+    Content-Type: application/json
+    Content-Length: 125
+    Server: Werkzeug/0.9.4 Python/2.7.5
+    Date: Sun, 29 Dec 2013 14:26:30 GMT
+
+    {
+      "code": 400,
+      "info_url": "http://developer.example.com/errors.html#error-code-400",
+      "message": "400: Bad Request"
+    }
+    $ curl http://127.0.0.1:5000/ -i
+    HTTP/1.0 404 NOT FOUND
+    Content-Type: application/json
+    Content-Length: 41
+    Server: Werkzeug/0.9.4 Python/2.7.5
+    Date: Sun, 29 Dec 2013 14:28:46 GMT
+
+    {
+      "error": "This page does not exist"
+    }
+    $ curl http://127.0.0.1:5000/my-exc -i
+    HTTP/1.0 200 OK
+    Content-Type: application/json
+    Content-Length: 25
+    Server: Werkzeug/0.9.4 Python/2.7.5
+    Date: Sun, 29 Dec 2013 14:27:33 GMT
+
+    {
+      "error": "Krivens!"
+    }
+
+Tests
+-----
 
 Tests are run by:
 
