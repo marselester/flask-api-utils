@@ -10,6 +10,7 @@ from werkzeug.exceptions import default_exceptions
 from flask import Flask, request
 
 from . import formatters
+from . import error_handlers
 
 
 __all__ = ('ResponsiveFlask')
@@ -44,32 +45,25 @@ class ResponsiveFlask(Flask):
     }
 
     def __init__(self, *args, **kwargs):
-        """Makes all built in HTTP exceptions unified dict format.
-
-        It assumes that ``Flask.make_response()`` can understand dict format
-        and make appropriate response.
-
-        The format is:
-
-        .. code-block:: python
-
-            {
-                'code': 400,
-                'message': '400: Bad Request',
-            }
-
-        """
         super(ResponsiveFlask, self).__init__(*args, **kwargs)
 
-        def make_error_response(error):
-            response = {
-                'code': error.code,
-                'message': str(error),
-            }
-            return response, error.code
+        self._register_handler_of_default_http_errors(
+            error_handlers.code_and_message
+        )
 
+    def _register_handler_of_default_http_errors(self, http_error_handler):
+        """Registers error handler of built in (Werkzeug) HTTP exceptions.
+
+        Note that it might override already defined error handlers.
+
+        """
         for http_code in default_exceptions:
-            self.error_handler_spec[None][http_code] = make_error_response
+            self.error_handler_spec[None][http_code] = http_error_handler
+
+    def default_errorhandler(self, f):
+        """Decorator which registers handler of default HTTP errors."""
+        self._register_handler_of_default_http_errors(f)
+        return f
 
     def _response_mimetype_based_on_accept_header(self):
         """Determines mimetype to response based on Accept header.
