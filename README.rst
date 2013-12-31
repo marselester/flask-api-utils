@@ -158,6 +158,10 @@ so you should declare it before them.
         app.run()
 
 
+Let's try to curl this example. First response shows that we redefined
+default ``{'code': 400, 'message': '400: Bad Request'}`` error format.
+Next ones show that you can handle specific errors as usual.
+
 .. code-block:: console
 
     $ curl http://127.0.0.1:5000/yarr -i
