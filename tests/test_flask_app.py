@@ -129,16 +129,17 @@ class ResponsiveFlaskTest(TestCase):
         self.assertEqual(r.mimetype, 'application/json')
 
 
+@app.route('/400')
+def hello_bad_request():
+    request.args['bad-key']
+
+
 class ErrorHandlingByResponsiveFlaskTest(TestCase):
 
     def setUp(self):
         self.app = app.test_client()
 
     def test_400_error_is_json_formatted_when_view_raises_key_error(self):
-        @app.route('/400')
-        def hello_bad_request():
-            request.args['bad-key']
-
         r = self.app.get('/400')
         r_json = json.loads(r.data)
         expected_status_code = 400
@@ -146,3 +147,20 @@ class ErrorHandlingByResponsiveFlaskTest(TestCase):
         self.assertEqual(r.status_code, expected_status_code)
         self.assertEqual(r_json['code'], expected_status_code)
         self.assertEqual(r.mimetype, 'application/json')
+
+    def test_error_response_contains_code_and_message_fields(self):
+        r = self.app.get('/400')
+        r_json = json.loads(r.data)
+
+        self.assertIn('code', r_json)
+        self.assertIn('message', r_json)
+
+    def test_it_is_possible_to_set_default_error_handler_by_decorator(self):
+        @app.default_errorhandler
+        def my_err_handler(error):
+            return {'error': str(error)}, error.code
+
+        r = self.app.get('/400')
+        r_json = json.loads(r.data)
+
+        self.assertIn('error', r_json)
