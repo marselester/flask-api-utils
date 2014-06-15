@@ -1,4 +1,11 @@
 # coding: utf-8
+"""
+api_utils.auth
+~~~~~~~~~~~~~~
+
+This module provides API authentication based on Hawk scheme.
+
+"""
 from functools import wraps
 
 from flask import request, current_app
