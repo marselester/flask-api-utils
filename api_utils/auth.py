@@ -2,7 +2,7 @@
 from functools import wraps
 
 from flask import request, current_app
-from werkzeug.exceptions import BadRequest, Forbidden
+from werkzeug.exceptions import BadRequest, Forbidden, Unauthorized
 import mohawk
 
 
@@ -52,7 +52,7 @@ class Hawk(object):
         @wraps(view_func)
         def wrapped_view_func(*args, **kwargs):
             if 'Authorization' not in request.headers:
-                raise BadRequest('Authorization header is required')
+                raise Unauthorized()
             if 'Content-Type' not in request.headers:
                 raise BadRequest('Content-Type header is required')
 

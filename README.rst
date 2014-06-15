@@ -235,11 +235,9 @@ Usage example:
 
 .. code-block:: console
 
-    $ curl http://127.0.0.1:5000/
-    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-    <title>400 Bad Request</title>
-    <h1>Bad Request</h1>
-    <p>Authorization header is required</p>
+    $ curl http://127.0.0.1:5000/ -i
+    HTTP/1.0 401 UNAUTHORIZED
+    ...
 
 Tests
 -----
