@@ -2,7 +2,7 @@
 from functools import wraps
 
 from flask import request, current_app
-from werkzeug.exceptions import BadRequest, Forbidden, Unauthorized
+from werkzeug.exceptions import BadRequest, Unauthorized
 import mohawk
 
 
@@ -71,7 +71,7 @@ class Hawk(object):
                 mohawk.exc.MisComputedContentHash,
                 mohawk.exc.TokenExpired
             ) as e:
-                raise Forbidden(e)
+                raise Unauthorized(e)
             except mohawk.exc.HawkFail as e:
                 raise BadRequest(e)
             else:
