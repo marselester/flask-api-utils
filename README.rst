@@ -17,7 +17,6 @@ It tries to follow RFC 2616, **Accept** request-header.
     from flask import request
     from api_utils import ResponsiveFlask
 
-
     app = ResponsiveFlask(__name__)
 
 
@@ -87,7 +86,7 @@ Here are curl examples with different **Accept** headers:
 Error Handling
 --------------
 
-``ResponsiveFlask`` even formats built in Werkzeug HTTP exceptions.
+**ResponsiveFlask** even formats built in Werkzeug HTTP exceptions.
 
 .. code-block:: console
 
@@ -103,7 +102,7 @@ Error Handling
       "message": "400: Bad Request"
     }
 
-You can set your own HTTP error handler by using ``app.default_errorhandler``
+You can set your own HTTP error handler by using **app.default_errorhandler**
 decorator. Note that it might override already defined error handlers,
 so you should declare it before them.
 
@@ -111,7 +110,6 @@ so you should declare it before them.
 
     from flask import request
     from api_utils import ResponsiveFlask
-
 
     app = ResponsiveFlask(__name__)
 
@@ -152,7 +150,6 @@ so you should declare it before them.
     @app.route('/yarr')
     def hello_bad_request():
         request.args['bad-key']
-
 
     if __name__ == '__main__':
         app.run()
@@ -197,6 +194,53 @@ Next ones show that you can handle specific errors as usual.
       "error": "Krivens!"
     }
 
+Hawk
+----
+
+**Hawk** extension provides API authentication for Flask.
+
+Hawk_ is an HTTP authentication scheme using a message authentication code
+(MAC) algorithm to provide partial HTTP request cryptographic verification.
+
+The extension is based on Mohawk_, so make sure you have installed it.
+
+.. code-block:: console
+
+    $ pip install mohawk
+
+Usage example:
+
+.. code-block:: python
+
+    from flask import Flask
+    from api_utils.auth import Hawk
+
+    app = Flask(__name__)
+    hawk = Hawk(app)
+
+
+    @hawk.client_key_loader
+    def lookup_client_key(client_id):
+        if client_id == 'Steve':
+            return 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn'
+
+
+    @app.route('/')
+    @hawk.verify
+    def index():
+        return '{"message": "Hello World"}'
+
+    if __name__ == '__main__':
+        app.run()
+
+.. code-block:: console
+
+    $ curl http://127.0.0.1:5000/
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+    <title>400 Bad Request</title>
+    <h1>Bad Request</h1>
+    <p>Authorization header is required</p>
+
 Tests
 -----
 
@@ -206,3 +250,6 @@ Tests are run by:
 
     $ pip install -r requirements.txt
     $ tox
+
+.. _Hawk: https://github.com/hueniverse/hawk
+.. _Mohawk: https://github.com/kumar303/mohawk
