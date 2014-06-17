@@ -59,23 +59,26 @@ class Hawk(object):
         self.lookup_client_key_func = wrapped_f
         return wrapped_f
 
-    def verify(self, view_func):
-        """Decorator that verifies HTTP requests."""
+    def realm(self, view_func):
+        """Decorator that provides an access to view function for
+        authenticated users only.
+
+        """
         @wraps(view_func)
         def wrapped_view_func(*args, **kwargs):
             if current_app.config['HAWK_ALLOW_COOKIE_AUTH'] and session:
-                self._verify_cookie()
+                self._auth_by_cookie()
             else:
-                self._verify_signature()
+                self._auth_by_signature()
             return view_func(*args, **kwargs)
 
         return wrapped_view_func
 
-    def _verify_cookie(self):
+    def _auth_by_cookie(self):
         if not current_user.is_authenticated():
             raise Unauthorized()
 
-    def _verify_signature(self):
+    def _auth_by_signature(self):
         if 'Authorization' not in request.headers:
             raise Unauthorized()
         if 'Content-Type' not in request.headers:

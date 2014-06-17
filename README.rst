@@ -226,7 +226,7 @@ Usage example:
 
 
     @app.route('/')
-    @hawk.verify
+    @hawk.realm
     def index():
         return '{"message": "Hello World"}'
 
