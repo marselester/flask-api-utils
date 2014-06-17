@@ -8,9 +8,13 @@ This module provides API authentication based on Hawk scheme.
 """
 from functools import wraps
 
-from flask import request, current_app
+from flask import request, session, current_app
 from werkzeug.exceptions import BadRequest, Unauthorized
 import mohawk
+try:
+    from flask.ext.login import current_user
+except ImportError:
+    pass
 
 
 class Hawk(object):
@@ -28,6 +32,7 @@ class Hawk(object):
 
     def init_app(self, app):
         app.config.setdefault('HAWK_ALGORITHM', 'sha256')
+        app.config.setdefault('HAWK_ALLOW_COOKIE_AUTH', False)
 
     def client_key_loader(self, f):
         """Registers a function to be called to find a client key.
@@ -58,6 +63,12 @@ class Hawk(object):
         """Decorator that verifies HTTP requests."""
         @wraps(view_func)
         def wrapped_view_func(*args, **kwargs):
+            if current_app.config['HAWK_ALLOW_COOKIE_AUTH'] and session:
+                if current_user.is_authenticated():
+                    return view_func(*args, **kwargs)
+                else:
+                    raise Unauthorized()
+
             if 'Authorization' not in request.headers:
                 raise Unauthorized()
             if 'Content-Type' not in request.headers:
