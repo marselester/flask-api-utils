@@ -64,35 +64,41 @@ class Hawk(object):
         @wraps(view_func)
         def wrapped_view_func(*args, **kwargs):
             if current_app.config['HAWK_ALLOW_COOKIE_AUTH'] and session:
-                if current_user.is_authenticated():
-                    return view_func(*args, **kwargs)
-                else:
-                    raise Unauthorized()
-
-            if 'Authorization' not in request.headers:
-                raise Unauthorized()
-            if 'Content-Type' not in request.headers:
-                raise BadRequest('Content-Type header is required')
-
-            try:
-                mohawk.Receiver(
-                    credentials_map=self.lookup_client_key_func,
-                    request_header=request.headers['Authorization'],
-                    url=request.url,
-                    method=request.method,
-                    content=request.data,
-                    content_type=request.headers['Content-Type']
-                )
-            except (
-                mohawk.exc.AlreadyProcessed,
-                mohawk.exc.MacMismatch,
-                mohawk.exc.MisComputedContentHash,
-                mohawk.exc.TokenExpired
-            ) as e:
-                raise Unauthorized(e)
-            except mohawk.exc.HawkFail as e:
-                raise BadRequest(e)
+                self._verify_cookie()
             else:
-                return view_func(*args, **kwargs)
+                self._verify_signature()
+            return view_func(*args, **kwargs)
 
         return wrapped_view_func
+
+    def _verify_cookie(self):
+        if not current_user.is_authenticated():
+            raise Unauthorized()
+
+    def _verify_signature(self):
+        if 'Authorization' not in request.headers:
+            raise Unauthorized()
+        if 'Content-Type' not in request.headers:
+            raise BadRequest('Content-Type header is required')
+
+        try:
+            mohawk.Receiver(
+                credentials_map=self.lookup_client_key_func,
+                request_header=request.headers['Authorization'],
+                url=request.url,
+                method=request.method,
+                content=request.data,
+                content_type=request.headers['Content-Type']
+            )
+        except (
+            mohawk.exc.AlreadyProcessed,
+            mohawk.exc.MacMismatch,
+            mohawk.exc.MisComputedContentHash,
+            mohawk.exc.TokenExpired
+        ) as e:
+            raise Unauthorized(e)
+        except mohawk.exc.HawkFail as e:
+            raise BadRequest(e)
+
+    def _sign_response(self):
+        pass
