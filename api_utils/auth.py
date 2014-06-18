@@ -32,7 +32,11 @@ class Hawk(object):
 
     def init_app(self, app):
         app.config.setdefault('HAWK_ALGORITHM', 'sha256')
+        app.config.setdefault('HAWK_SIGN_RESPONSE', False)
         app.config.setdefault('HAWK_ALLOW_COOKIE_AUTH', False)
+
+        if app.config['HAWK_SIGN_RESPONSE']:
+            app.after_request(self._sign_response)
 
     def client_key_loader(self, f):
         """Registers a function to be called to find a client key.
@@ -103,5 +107,27 @@ class Hawk(object):
         except mohawk.exc.HawkFail as e:
             raise BadRequest(e)
 
-    def _sign_response(self):
-        pass
+    def _sign_response(self, response):
+        """Signs a response if it's possible."""
+        if 'Authorization' not in request.headers:
+            return response
+        if 'Content-Type' not in request.headers:
+            return response
+
+        try:
+            mohawk_receiver = mohawk.Receiver(
+                credentials_map=self.lookup_client_key_func,
+                request_header=request.headers['Authorization'],
+                url=request.url,
+                method=request.method,
+                content=request.data,
+                content_type=request.headers['Content-Type']
+            )
+        except mohawk.exc.HawkFail:
+            return response
+
+        response.headers['Server-Authorization'] = mohawk_receiver.respond(
+            content=response.data,
+            content_type=response.mimetype
+        )
+        return response
