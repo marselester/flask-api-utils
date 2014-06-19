@@ -1,9 +1,11 @@
 # coding: utf-8
+import json
 from unittest import TestCase
 
 from flask import Flask
 from werkzeug.exceptions import BadRequest, Unauthorized
 from api_utils.auth import Hawk
+import mohawk
 
 app = Flask(__name__)
 hawk = Hawk(app)
@@ -17,7 +19,7 @@ def get_client_key(client_id):
         raise LookupError()
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 @hawk.realm
 def protected_view():
     return 'hello world'
@@ -79,3 +81,74 @@ class HawkAuthBySignature(TestCase):
         with app.test_request_context(headers=headers):
             with self.assertRaises(BadRequest):
                 hawk._auth_by_signature()
+
+    def test_successfull_auth_when_http_method_is_get(self):
+        data = {}
+        credentials = {
+            'id': 'Alice',
+            'key': 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
+            'algorithm': 'sha256'
+        }
+        url = 'http://localhost/?hello=world'
+        method = 'GET'
+        content = json.dumps(data)
+        content_type = 'application/json'
+
+        sender = mohawk.Sender(
+            credentials,
+            url,
+            method,
+            content,
+            content_type
+        )
+
+        r = self.app.get(
+            '/',
+            headers={
+                'Authorization': sender.request_header
+            },
+            query_string={
+                'hello': 'world'
+            },
+            data=content,
+            content_type=content_type
+        )
+        expected_status_code = 200
+        self.assertEqual(r.status_code, expected_status_code)
+
+    def test_successfull_auth_when_http_method_is_post(self):
+        data = {
+            'fizz': 'buzz',
+            'blah': '1111'
+        }
+        credentials = {
+            'id': 'Alice',
+            'key': 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
+            'algorithm': 'sha256'
+        }
+        url = 'http://localhost/?hello=world'
+        method = 'POST'
+        content = json.dumps(data)
+        content_type = 'application/json'
+
+        sender = mohawk.Sender(
+            credentials,
+            url,
+            method,
+            content,
+            content_type
+        )
+
+        r = self.app.post(
+            '/',
+            headers={
+                'Authorization': sender.request_header
+            },
+            query_string={
+                'hello': 'world'
+            },
+            data=content,
+            content_type=content_type
+        )
+        expected_status_code = 200
+        self.assertEqual(r.status_code, expected_status_code)
