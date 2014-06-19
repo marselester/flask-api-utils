@@ -25,7 +25,7 @@ class Hawk(object):
 
     """
     def __init__(self, app=None):
-        self.lookup_client_key_func = None
+        self._client_key_loader_func = None
 
         if app is not None:
             self.init_app(app)
@@ -44,9 +44,11 @@ class Hawk(object):
         Function you set has to take a client id and return a client key::
 
             @hawk.client_key_loader
-            def lookup_client_key(client_id):
-                if client_id == 'Steve':
+            def get_client_key(client_id):
+                if client_id == 'Alice':
                     return 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn'
+                else:
+                    raise LookupError()
 
         :param f: The callback for retrieving a client key.
 
@@ -60,7 +62,7 @@ class Hawk(object):
                 'algorithm': current_app.config['HAWK_ALGORITHM']
             }
 
-        self.lookup_client_key_func = wrapped_f
+        self._client_key_loader_func = wrapped_f
         return wrapped_f
 
     def realm(self, view_func):
@@ -83,29 +85,35 @@ class Hawk(object):
             raise Unauthorized()
 
     def _auth_by_signature(self):
+        if self._client_key_loader_func is None:
+            raise RuntimeError('Client key loader function was not defined')
         if 'Authorization' not in request.headers:
             raise Unauthorized()
-        if 'Content-Type' not in request.headers:
-            raise BadRequest('Content-Type header is required')
 
         try:
             mohawk.Receiver(
-                credentials_map=self.lookup_client_key_func,
+                credentials_map=self._client_key_loader_func,
                 request_header=request.headers['Authorization'],
                 url=request.url,
                 method=request.method,
                 content=request.data,
-                content_type=request.headers['Content-Type']
+                content_type=request.mimetype
             )
+        except mohawk.exc.MacMismatch:
+            # mohawk exception contains computed MAC.
+            # We should not expose it in response.
+            raise Unauthorized()
         except (
+            mohawk.exc.CredentialsLookupError,
             mohawk.exc.AlreadyProcessed,
-            mohawk.exc.MacMismatch,
             mohawk.exc.MisComputedContentHash,
             mohawk.exc.TokenExpired
         ) as e:
-            raise Unauthorized(e)
+            raise Unauthorized(str(e))
         except mohawk.exc.HawkFail as e:
-            raise BadRequest(e)
+            raise BadRequest(str(e))
+        except KeyError:
+            raise BadRequest()
 
     def _sign_response(self, response):
         """Signs a response if it's possible."""
@@ -116,7 +124,7 @@ class Hawk(object):
 
         try:
             mohawk_receiver = mohawk.Receiver(
-                credentials_map=self.lookup_client_key_func,
+                credentials_map=self._client_key_loader_func,
                 request_header=request.headers['Authorization'],
                 url=request.url,
                 method=request.method,
