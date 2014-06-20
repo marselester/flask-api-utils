@@ -31,9 +31,12 @@ class Hawk(object):
             self.init_app(app)
 
     def init_app(self, app):
-        app.config.setdefault('HAWK_ALGORITHM', 'sha256')
         app.config.setdefault('HAWK_SIGN_RESPONSE', False)
         app.config.setdefault('HAWK_ALLOW_COOKIE_AUTH', False)
+        app.config.setdefault('HAWK_ALGORITHM', 'sha256')
+        app.config.setdefault('HAWK_ACCEPT_UNTRUSTED_CONTENT', False)
+        app.config.setdefault('HAWK_LOCALTIME_OFFSET_IN_SECONDS', 0)
+        app.config.setdefault('HAWK_TIMESTAMP_SKEW_IN_SECONDS', 60)
 
         if app.config['HAWK_SIGN_RESPONSE']:
             app.after_request(self._sign_response)
@@ -97,7 +100,10 @@ class Hawk(object):
                 url=request.url,
                 method=request.method,
                 content=request.data,
-                content_type=request.mimetype
+                content_type=request.mimetype,
+                accept_untrusted_content=current_app.config['HAWK_ACCEPT_UNTRUSTED_CONTENT'],
+                localtime_offset_in_seconds=current_app.config['HAWK_LOCALTIME_OFFSET_IN_SECONDS'],
+                timestamp_skew_in_seconds=current_app.config['HAWK_TIMESTAMP_SKEW_IN_SECONDS']
             )
         except mohawk.exc.MacMismatch:
             # mohawk exception contains computed MAC.
