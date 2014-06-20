@@ -5,7 +5,10 @@ Flask API Utils
 .. image:: https://travis-ci.org/marselester/flask-api-utils.png
    :target: https://travis-ci.org/marselester/flask-api-utils
 
-Flask utils which help you to create API.
+Flask-API-Utils helps you to create APIs. It makes responses in appropriate
+formats, e.g., JSON. All you need to do is to return dict from your views.
+Another useful feature is an authentication. The library supports
+Hawk_ HTTP authentication scheme and `Flask-Login`_.
 
 "Accept" Header based Response
 ------------------------------
@@ -254,3 +257,4 @@ Tests are run by:
 
 .. _Hawk: https://github.com/hueniverse/hawk
 .. _Mohawk: https://github.com/kumar303/mohawk
+.. _Flask-Login: https://flask-login.readthedocs.org
