@@ -220,15 +220,18 @@ Usage example:
 
 
     @hawk.client_key_loader
-    def lookup_client_key(client_id):
-        if client_id == 'Steve':
+    def get_client_key(client_id):
+        # In a real project you will likely use some storage.
+        if client_id == 'Alice':
             return 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn'
+        else:
+            raise LookupError()
 
 
     @app.route('/')
     @hawk.realm
     def index():
-        return '{"message": "Hello World"}'
+        return 'hello world'
 
     if __name__ == '__main__':
         app.run()
