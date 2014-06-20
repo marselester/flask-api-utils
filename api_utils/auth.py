@@ -125,8 +125,6 @@ class Hawk(object):
         """Signs a response if it's possible."""
         if 'Authorization' not in request.headers:
             return response
-        if 'Content-Type' not in request.headers:
-            return response
 
         try:
             mohawk_receiver = mohawk.Receiver(
@@ -135,7 +133,10 @@ class Hawk(object):
                 url=request.url,
                 method=request.method,
                 content=request.data,
-                content_type=request.headers['Content-Type']
+                content_type=request.mimetype,
+                accept_untrusted_content=current_app.config['HAWK_ACCEPT_UNTRUSTED_CONTENT'],
+                localtime_offset_in_seconds=current_app.config['HAWK_LOCALTIME_OFFSET_IN_SECONDS'],
+                timestamp_skew_in_seconds=current_app.config['HAWK_TIMESTAMP_SKEW_IN_SECONDS']
             )
         except mohawk.exc.HawkFail:
             return response
