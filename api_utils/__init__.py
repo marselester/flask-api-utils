@@ -10,8 +10,6 @@ from werkzeug.exceptions import default_exceptions
 from flask import Flask, request
 
 from . import formatters
-from . import error_handlers
-
 
 __all__ = ('ResponsiveFlask')
 
@@ -38,31 +36,21 @@ class ResponsiveFlask(Flask):
         app.response_formatters[xml_mimetype] = dummy_xml_formatter
 
     """
-
-    default_mimetype = 'application/json'
-    response_formatters = {
-        'application/json': formatters.json,
-    }
-
     def __init__(self, *args, **kwargs):
         super(ResponsiveFlask, self).__init__(*args, **kwargs)
+        self.default_mimetype = 'application/json'
+        self.response_formatters = {
+            'application/json': formatters.json
+        }
 
-        self._register_handler_of_default_http_errors(
-            error_handlers.code_and_message
-        )
-
-    def _register_handler_of_default_http_errors(self, http_error_handler):
-        """Registers error handler of built in (Werkzeug) HTTP exceptions.
+    def default_errorhandler(self, f):
+        """Decorator that registers handler of default (Werkzeug) HTTP errors.
 
         Note that it might override already defined error handlers.
 
         """
         for http_code in default_exceptions:
-            self.error_handler_spec[None][http_code] = http_error_handler
-
-    def default_errorhandler(self, f):
-        """Decorator which registers handler of default HTTP errors."""
-        self._register_handler_of_default_http_errors(f)
+            self.error_handler_spec[None][http_code] = f
         return f
 
     def _response_mimetype_based_on_accept_header(self):
