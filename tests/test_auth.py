@@ -7,14 +7,22 @@ from werkzeug.exceptions import BadRequest, Unauthorized
 from api_utils.auth import Hawk
 import mohawk
 
+from .utils import HawkTestMixin
+
 app = Flask(__name__)
 hawk = Hawk(app)
+
+CREDENTIALS = {
+    'id': 'Alice',
+    'key': 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
+    'algorithm': 'sha256'
+}
 
 
 @hawk.client_key_loader
 def get_client_key(client_id):
-    if client_id == 'Alice':
-        return 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn'
+    if client_id == CREDENTIALS['id']:
+        return CREDENTIALS['key']
     else:
         raise LookupError()
 
@@ -25,7 +33,7 @@ def protected_view():
     return 'hello world'
 
 
-class HawkAuthBySignature(TestCase):
+class HawkAuthBySignatureTest(TestCase, HawkTestMixin):
     def setUp(self):
         self.app = app.test_client()
 
@@ -83,72 +91,38 @@ class HawkAuthBySignature(TestCase):
                 hawk._auth_by_signature()
 
     def test_successfull_auth_when_http_method_is_get(self):
-        data = {}
-        credentials = {
-            'id': 'Alice',
-            'key': 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
-            'algorithm': 'sha256'
-        }
-        url = 'http://localhost/?hello=world'
-        method = 'GET'
-        content = json.dumps(data)
-        content_type = 'application/json'
-
-        sender = mohawk.Sender(
-            credentials,
-            url,
-            method,
-            content,
-            content_type
-        )
-
-        r = self.app.get(
-            '/',
-            headers={
-                'Authorization': sender.request_header
-            },
-            query_string={
-                'hello': 'world'
-            },
-            data=content,
-            content_type=content_type
-        )
-        expected_status_code = 200
-        self.assertEqual(r.status_code, expected_status_code)
+        r = self.signed_request(CREDENTIALS, path='/?hello=world')
+        self.assertEqual(r.status_code, 200)
 
     def test_successfull_auth_when_http_method_is_post(self):
-        data = {
-            'fizz': 'buzz',
-            'blah': '1111'
-        }
-        credentials = {
-            'id': 'Alice',
-            'key': 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
-            'algorithm': 'sha256'
-        }
-        url = 'http://localhost/?hello=world'
-        method = 'POST'
-        content = json.dumps(data)
-        content_type = 'application/json'
-
-        sender = mohawk.Sender(
-            credentials,
-            url,
-            method,
-            content,
-            content_type
+        r = self.signed_request(
+            CREDENTIALS,
+            method='POST',
+            path='/?hello=world&fields=id,title',
+            data={
+                'fizz': 'buzz',
+                'blah': '1111'
+            }
         )
+        self.assertEqual(r.status_code, 200)
 
-        r = self.app.post(
-            '/',
-            headers={
-                'Authorization': sender.request_header
-            },
-            query_string={
-                'hello': 'world'
-            },
-            data=content,
-            content_type=content_type
-        )
-        expected_status_code = 200
-        self.assertEqual(r.status_code, expected_status_code)
+
+class HawkSignResponseTest(TestCase, HawkTestMixin):
+    def setUp(self):
+        self.app = app.test_client()
+
+    def tearDown(self):
+        app.config['HAWK_SIGN_RESPONSE'] = False
+
+    def test_responses_are_signed_when_hawk_was_configured_to_sign(self):
+        app.config['HAWK_SIGN_RESPONSE'] = True
+        hawk.init_app(app)
+
+        r = self.signed_request(CREDENTIALS)
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('Server-Authorization', r.headers)
+
+    def test_responses_are_not_signed_by_default(self):
+        r = self.signed_request(CREDENTIALS)
+        self.assertEqual(r.status_code, 200)
+        self.assertNotIn('Server-Authorization', r.headers)
