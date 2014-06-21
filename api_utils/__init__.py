@@ -3,7 +3,7 @@
 api_utils
 ~~~~~~~~~
 
-Flask utils which help you to create API.
+Flask-API-Utils helps you to create APIs.
 
 """
 from .app import ResponsiveFlask

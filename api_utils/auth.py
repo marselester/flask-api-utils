@@ -3,7 +3,8 @@
 api_utils.auth
 ~~~~~~~~~~~~~~
 
-This module provides API authentication based on Hawk scheme.
+This module provides API authentication based on Hawk scheme and
+Flask-Login extension.
 
 """
 from functools import wraps

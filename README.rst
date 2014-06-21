@@ -17,7 +17,6 @@ It tries to follow RFC 2616, **Accept** request-header.
 
 .. code-block:: python
 
-    from flask import request
     from api_utils import ResponsiveFlask
 
     app = ResponsiveFlask(__name__)
@@ -26,11 +25,6 @@ It tries to follow RFC 2616, **Accept** request-header.
     @app.route('/')
     def hello_world():
         return {'hello': 'world'}
-
-
-    @app.route('/yarr')
-    def hello_bad_request():
-        request.args['bad-key']
 
 
     def dummy_xml_formatter(*args, **kwargs):
@@ -89,23 +83,7 @@ Here are curl examples with different **Accept** headers:
 Error Handling
 --------------
 
-**ResponsiveFlask** even formats built in Werkzeug HTTP exceptions.
-
-.. code-block:: console
-
-    $ curl http://127.0.0.1:5000/yarr -i
-    HTTP/1.0 400 BAD REQUEST
-    Content-Type: application/json
-    Content-Length: 51
-    Server: Werkzeug/0.9.4 Python/2.7.5
-    Date: Tue, 10 Dec 2013 04:55:40 GMT
-
-    {
-      "code": 400,
-      "message": "400: Bad Request"
-    }
-
-You can set your own HTTP error handler by using **app.default_errorhandler**
+You can set HTTP error handler by using **@app.default_errorhandler**
 decorator. Note that it might override already defined error handlers,
 so you should declare it before them.
 
@@ -197,8 +175,8 @@ Next ones show that you can handle specific errors as usual.
       "error": "Krivens!"
     }
 
-Hawk
-----
+Authentication
+--------------
 
 **Hawk** extension provides API authentication for Flask.
 
