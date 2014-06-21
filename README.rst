@@ -6,10 +6,10 @@ Flask-API-Utils
    :target: https://travis-ci.org/marselester/flask-api-utils
 
 Flask-API-Utils helps you to create APIs. It makes responses in appropriate
-formats, e.g., JSON. All you need to do is to return dictionary
+formats, for instance, JSON. All you need to do is to return dictionary
 from your views. Another useful feature is an authentication.
 The library supports Hawk_ HTTP authentication scheme and `Flask-Login`_
-extension.
+extension. To sum up, there is an `API example project`_.
 
 "Accept" Header based Response
 ------------------------------
@@ -226,6 +226,21 @@ Usage example:
     HTTP/1.0 401 UNAUTHORIZED
     ...
 
+Cookie based authentication is disabled by default.
+Set ``HAWK_ALLOW_COOKIE_AUTH = True`` to enable it. Also **Hawk** supports
+response signing, enable it ``HAWK_SIGN_RESPONSE = True`` if you need it.
+
+Following configuration keys are used by Mohawk_ library.
+
+.. code-block:: python
+
+    HAWK_ALGORITHM = 'sha256'
+    HAWK_ACCEPT_UNTRUSTED_CONTENT = False
+    HAWK_LOCALTIME_OFFSET_IN_SECONDS = 0
+    HAWK_TIMESTAMP_SKEW_IN_SECONDS = 60
+
+Check `Mohawk documentation`_ for more information.
+
 Tests
 -----
 
@@ -236,6 +251,8 @@ Tests are run by:
     $ pip install -r requirements.txt
     $ tox
 
+.. _API example project: https://github.com/marselester/api-example-based-on-flask
 .. _Hawk: https://github.com/hueniverse/hawk
 .. _Mohawk: https://github.com/kumar303/mohawk
+.. _Mohawk documentation: http://mohawk.readthedocs.org
 .. _Flask-Login: https://flask-login.readthedocs.org
