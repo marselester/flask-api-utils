@@ -7,3 +7,4 @@ Flask utils which help you to create API.
 
 """
 from .app import ResponsiveFlask
+from .auth import Hawk

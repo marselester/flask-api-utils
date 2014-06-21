@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from flask import Flask
 from werkzeug.exceptions import BadRequest, Unauthorized
-from api_utils.auth import Hawk
+from api_utils import Hawk
 from flask.ext.login import LoginManager
 
 from .utils import HawkTestMixin

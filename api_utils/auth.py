@@ -10,11 +10,13 @@ from functools import wraps
 
 from flask import request, session, current_app
 from werkzeug.exceptions import BadRequest, Unauthorized
-import mohawk
 try:
+    import mohawk
     from flask.ext.login import current_user
 except ImportError:
     pass
+
+__all__ = ('Hawk')
 
 
 class Hawk(object):
