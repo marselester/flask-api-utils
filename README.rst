@@ -1,19 +1,22 @@
 ===============
-Flask API Utils
+Flask-API-Utils
 ===============
 
 .. image:: https://travis-ci.org/marselester/flask-api-utils.png
    :target: https://travis-ci.org/marselester/flask-api-utils
 
 Flask-API-Utils helps you to create APIs. It makes responses in appropriate
-formats, e.g., JSON. All you need to do is to return dict from your views.
-Another useful feature is an authentication. The library supports
-Hawk_ HTTP authentication scheme and `Flask-Login`_.
+formats, e.g., JSON. All you need to do is to return dictionary
+from your views. Another useful feature is an authentication.
+The library supports Hawk_ HTTP authentication scheme and `Flask-Login`_
+extension.
 
 "Accept" Header based Response
 ------------------------------
 
-It tries to follow RFC 2616, **Accept** request-header.
+**ResponsiveFlask** tends to make responses based on **Accept**
+request-header (RFC 2616). If a view function does not return a dictionary,
+then response will be processed as usual. Here is an example.
 
 .. code-block:: python
 
@@ -80,8 +83,8 @@ Here are curl examples with different **Accept** headers:
       ]
     }
 
-Error Handling
---------------
+HTTP Error Handling
+-------------------
 
 You can set HTTP error handler by using **@app.default_errorhandler**
 decorator. Note that it might override already defined error handlers,
