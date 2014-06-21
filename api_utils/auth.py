@@ -70,7 +70,7 @@ class Hawk(object):
         self._client_key_loader_func = wrapped_f
         return wrapped_f
 
-    def realm(self, view_func):
+    def auth_required(self, view_func):
         """Decorator that provides an access to view function for
         authenticated users only.
 

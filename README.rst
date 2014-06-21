@@ -216,7 +216,7 @@ Usage example:
 .. code-block:: python
 
     from flask import Flask
-    from api_utils.auth import Hawk
+    from api_utils import Hawk
 
     app = Flask(__name__)
     hawk = Hawk(app)
@@ -232,7 +232,7 @@ Usage example:
 
 
     @app.route('/')
-    @hawk.realm
+    @hawk.auth_required
     def index():
         return 'hello world'
 

@@ -29,7 +29,7 @@ def get_client_key(client_id):
 
 
 @app.route('/', methods=['GET', 'POST'])
-@hawk.realm
+@hawk.auth_required
 def protected_view():
     return 'hello world'
 
