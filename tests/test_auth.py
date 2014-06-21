@@ -1,16 +1,17 @@
 # coding: utf-8
-import json
+import mock
 from unittest import TestCase
 
 from flask import Flask
 from werkzeug.exceptions import BadRequest, Unauthorized
 from api_utils.auth import Hawk
-import mohawk
+from flask.ext.login import LoginManager
 
 from .utils import HawkTestMixin
 
 app = Flask(__name__)
 hawk = Hawk(app)
+login_manager = LoginManager(app)
 
 CREDENTIALS = {
     'id': 'Alice',
@@ -39,6 +40,22 @@ class HawkAuthBySignatureTest(TestCase, HawkTestMixin):
 
     def tearDown(self):
         hawk._client_key_loader_func = get_client_key
+
+    def test_successful_auth_when_http_method_is_get(self):
+        r = self.signed_request(CREDENTIALS, path='/?hello=world')
+        self.assertEqual(r.status_code, 200)
+
+    def test_successful_auth_when_http_method_is_post(self):
+        r = self.signed_request(
+            CREDENTIALS,
+            method='POST',
+            path='/?hello=world&fields=id,title',
+            data={
+                'fizz': 'buzz',
+                'blah': '1111'
+            }
+        )
+        self.assertEqual(r.status_code, 200)
 
     def test_runtime_error_when_client_key_loader_was_not_defined(self):
         hawk._client_key_loader_func = None
@@ -90,21 +107,22 @@ class HawkAuthBySignatureTest(TestCase, HawkTestMixin):
             with self.assertRaises(BadRequest):
                 hawk._auth_by_signature()
 
-    def test_successfull_auth_when_http_method_is_get(self):
-        r = self.signed_request(CREDENTIALS, path='/?hello=world')
-        self.assertEqual(r.status_code, 200)
 
-    def test_successfull_auth_when_http_method_is_post(self):
-        r = self.signed_request(
-            CREDENTIALS,
-            method='POST',
-            path='/?hello=world&fields=id,title',
-            data={
-                'fizz': 'buzz',
-                'blah': '1111'
-            }
-        )
-        self.assertEqual(r.status_code, 200)
+class HawkAuthByCookieTest(TestCase):
+    def setUp(self):
+        app.config['SECRET_KEY'] = 'secret'
+
+    def test_401_when_current_user_is_not_authenticated(self):
+        with app.test_request_context():
+            with self.assertRaises(Unauthorized):
+                hawk._auth_by_cookie()
+
+    @mock.patch('api_utils.auth.current_user')
+    def test_successful_authentication(self, current_user_):
+        current_user_.is_authenticated.return_value = True
+
+        with app.test_request_context():
+                hawk._auth_by_cookie()
 
 
 class HawkSignResponseTest(TestCase, HawkTestMixin):
