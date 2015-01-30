@@ -17,7 +17,7 @@ try:
 except ImportError:
     pass
 
-__all__ = ('Hawk')
+__all__ = ('Hawk',)
 
 
 class Hawk(object):

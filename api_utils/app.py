@@ -11,7 +11,7 @@ from flask import Flask, request
 
 from . import formatters
 
-__all__ = ('ResponsiveFlask')
+__all__ = ('ResponsiveFlask',)
 
 
 class ResponsiveFlask(Flask):
