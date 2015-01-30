@@ -77,7 +77,8 @@ class HawkAuthBySignatureTest(TestCase, HawkTestMixin):
         with app.test_request_context(headers=headers):
             with self.assertRaises(BadRequest) as cm:
                 hawk._auth_by_signature()
-            self.assertEqual(cm.exception.description, 'Unknown scheme: blah')
+            message = "Unknown scheme 'blah' when parsing header"
+            self.assertEqual(cm.exception.description, message)
 
     def test_401_when_client_was_not_found(self):
         headers = {
