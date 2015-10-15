@@ -18,7 +18,7 @@ class HawkTestMixin(object):
             content_type
         )
 
-        return self.app.open(
+        return self.client.open(
             method=method,
             path=path,
             headers={'Authorization': sender.request_header},

@@ -36,6 +36,7 @@ class Hawk(object):
             self.init_app(app)
 
     def init_app(self, app):
+        app.config.setdefault('HAWK_ENABLED', True)
         app.config.setdefault('HAWK_SIGN_RESPONSE', False)
         app.config.setdefault('HAWK_ALLOW_COOKIE_AUTH', False)
         app.config.setdefault('HAWK_ALGORITHM', 'sha256')
@@ -77,13 +78,16 @@ class Hawk(object):
         """Decorator that provides an access to view function for
         authenticated users only.
 
+        Note that we don't run authentication when `HAWK_ENABLED` is `False`.
+
         """
         @wraps(view_func)
         def wrapped_view_func(*args, **kwargs):
-            if current_app.config['HAWK_ALLOW_COOKIE_AUTH'] and session:
-                self._auth_by_cookie()
-            else:
-                self._auth_by_signature()
+            if current_app.config['HAWK_ENABLED']:
+                if current_app.config['HAWK_ALLOW_COOKIE_AUTH'] and session:
+                    self._auth_by_cookie()
+                else:
+                    self._auth_by_signature()
             return view_func(*args, **kwargs)
 
         return wrapped_view_func
