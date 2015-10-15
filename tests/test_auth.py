@@ -34,9 +34,22 @@ def protected_view():
     return 'hello world'
 
 
+class HawkDisabledAuthTest(TestCase):
+    def setUp(self):
+        app.config['HAWK_ENABLED'] = False
+        self.client = app.test_client()
+
+    def tearDown(self):
+        app.config['HAWK_ENABLED'] = True
+
+    def test_200_when_current_user_is_not_authenticated(self):
+        r = self.client.open(method='GET', path='/')
+        self.assertEqual(r.status_code, 200)
+
+
 class HawkAuthBySignatureTest(TestCase, HawkTestMixin):
     def setUp(self):
-        self.app = app.test_client()
+        self.client = app.test_client()
 
     def tearDown(self):
         hawk._client_key_loader_func = get_client_key
@@ -128,7 +141,7 @@ class HawkAuthByCookieTest(TestCase):
 
 class HawkSignResponseTest(TestCase, HawkTestMixin):
     def setUp(self):
-        self.app = app.test_client()
+        self.client = app.test_client()
 
     def tearDown(self):
         app.config['HAWK_SIGN_RESPONSE'] = False
