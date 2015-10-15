@@ -241,6 +241,9 @@ Following configuration keys are used by Mohawk_ library.
 
 Check `Mohawk documentation`_ for more information.
 
+It can be convenient to globally turn off authentication when unit testing
+by setting ``HAWK_ENABLED = False``.
+
 Tests
 -----
 
