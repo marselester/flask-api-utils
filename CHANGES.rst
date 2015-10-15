@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Version 1.0.1
+-------------
+
+- fix `__all__` tuple issue, thanks @attila
+- fix Flask-Login `user.is_authenticated` compatibility issue
+
 Version 1.0.0
 -------------
 
