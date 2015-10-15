@@ -118,9 +118,9 @@ class HawkAuthByCookieTest(TestCase):
             with self.assertRaises(Unauthorized):
                 hawk._auth_by_cookie()
 
-    @mock.patch('api_utils.auth.current_user')
-    def test_successful_authentication(self, current_user_):
-        current_user_.is_authenticated.return_value = True
+    @mock.patch('api_utils.auth.compat.is_user_authenticated')
+    def test_successful_authentication(self, is_user_authenticated):
+        is_user_authenticated.return_value = True
 
         with app.test_request_context():
                 hawk._auth_by_cookie()

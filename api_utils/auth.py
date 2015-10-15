@@ -17,6 +17,8 @@ try:
 except ImportError:
     pass
 
+from . import compat
+
 __all__ = ('Hawk',)
 
 
@@ -87,7 +89,7 @@ class Hawk(object):
         return wrapped_view_func
 
     def _auth_by_cookie(self):
-        if not current_user.is_authenticated():
+        if not compat.is_user_authenticated(current_user):
             raise Unauthorized()
 
     def _auth_by_signature(self):
